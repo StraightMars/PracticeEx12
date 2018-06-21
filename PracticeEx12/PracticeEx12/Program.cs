@@ -6,111 +6,70 @@ using System.Threading.Tasks;
 
 namespace PracticeEx12
 {
-    public class Node
+    public class TreeEl
     {
-        public int number;
-        public Node rightLeaf;
-        public Node leftLeaf;
-        public Node(int value)
+        public int data;
+        public TreeEl left;
+        public TreeEl right;
+        public TreeEl(int value, TreeEl l = null, TreeEl r = null)
         {
-            number = value;
-            rightLeaf = null;
-            leftLeaf = null;
-        }
-        public bool isLeaf(ref Node node)
-        {
-            return (node.rightLeaf == null && node.leftLeaf == null);
-        }
-        public void insertData(ref Node node, int data)
-        {
-            if (node == null)
-            {
-                node = new Node(data);
-            }
-            else if (node.number < data)
-            {
-                insertData(ref node.rightLeaf, data);
-            }
-            else if (node.number > data)
-            {
-                insertData(ref node.leftLeaf, data);
-            }
-        }
-        public bool search(Node node, int s)
-        {
-            if (node == null)
-                return false;
-            if (node.number == s)
-            {
-                return true;
-            }
-            else if (node.number < s)
-            {
-                return search(node.rightLeaf, s);
-            }
-            else if (node.number > s)
-            {
-                return search(node.leftLeaf, s);
-            }
-            return false;
-        }
-        public void display(Node n)
-        {
-            if (n == null)
-                return;
-            display(n.leftLeaf);
-            Console.Write(n.number + " ");
-            display(n.rightLeaf);
-        }
-    }
-    public class BinaryTree
-    {
-        private Node root;
-        public int count;
-        public BinaryTree()
-        {
-            root = null;
-            count = 0;
-        }
-        public bool isEmpty()
-        {
-            return root == null;
-        }
-        public void insert(int d)
-        {
-            if (isEmpty())
-            {
-                root = new Node(d);
-            }
-            else
-            {
-                root.insertData(ref root, d);
-            }
-            count++;
-        }
-        public bool search(int s)
-        {
-            return root.search(root, s);
-        }
-        public bool isLeaf()
-        {
-            if (!isEmpty())
-                return root.isLeaf(ref root);
-
-            return true;
-        }
-        public void display()
-        {
-            if (!isEmpty())
-                root.display(root);
-        }
-        public int Count()
-        {
-            return count;
+            data = value;
+            left = l;
+            right = r;
         }
     }
     class Program
     {
+        public static TreeEl root;
+        public static List<int> result = new List<int>();
+        public static void Add(int value, ref TreeEl staticRoot, ref int treeCompares, ref int treeChanges)
+        {
+            if (staticRoot == null)
+            {
+                treeChanges++;
+                staticRoot = new TreeEl(value);
+                return;
+            }
+            treeCompares++;
+            if (staticRoot.data < value)
+            {
+                treeChanges++;
+                Add(value, ref staticRoot.right, ref treeCompares, ref treeChanges);
+            }
+            else
+            {
+                treeChanges++;
+                Add(value, ref staticRoot.left, ref treeCompares, ref treeChanges);
+            }
+        }
+        public static void CreateTree(int[] arr, out int treeCompares, out int treeChanges)
+        {
+            treeCompares = 0;
+            treeChanges = 0;
+            foreach (int elem in arr)
+            {
+                Add(elem, ref root, ref treeCompares, ref treeChanges);
+            }
+        }
+        public static void GetNumber(TreeEl node)
+        {
+            if (node != null)
+            {
+                GetNumber(node.left);
+                result.Add(node.data);
+                GetNumber(node.right);
+            }
+        }
+        public static int[] TreeSort(int[] arr, out int treeCompares, out int treeChanges)
+        {
+            treeCompares = 0;
+            treeChanges = 0;
+            root = null;
+            result.Clear();
+            CreateTree(arr, out treeCompares, out treeChanges);
+            GetNumber(root);
+            return result.ToArray();
+        }
         static void ShakeSort(int[] arr, out int peresAmount, out int compareAmount)
         {
             int b = 0;
@@ -186,7 +145,7 @@ namespace PracticeEx12
             Console.WriteLine("Здравствуйте! Введите размер массивов (для чистоты эксперимента - все массивы одной размерности):");
             bool ok;
             int N;
-            int movesShake, comparesShake;
+            int movesShake, comparesShake, movesTree, comparesTree;
             Random rnd = new Random();
             do
             {
@@ -200,57 +159,66 @@ namespace PracticeEx12
                 }
             } while (!ok);
             int[] inc = CreateIncArr(N, rnd);
+            int[] inc1 = inc;
             int[] dec = CreateDecArr(N, rnd);
+            int[] dec1 = dec;
             int[] disordered = CreateDisordedArr(N, rnd);
-            BinaryTree incTree = new BinaryTree();
-            BinaryTree decTree = new BinaryTree();
-            BinaryTree disorderedTree = new BinaryTree();
-            int permutations = N;
+            int[] disordered1 = disordered;
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Начальный возрастающий массив: ");
+            Console.ResetColor();
             ShowArr(inc);
             ShakeSort(inc, out movesShake, out comparesShake);
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный возрастающий массив (shaker): ");
+            Console.ResetColor();
             ShowArr(inc);
             Console.WriteLine("Количество перестановок в возрастающем массиве: {0},\n" +
                 "Количество сравнений в возрастающем массиве: {1}.", movesShake, comparesShake);
-            for (int i = 0; i < inc.Length; i++)
-            {
-                incTree.insert(inc[i]);
-            }
+            TreeSort(inc1, out comparesTree, out movesTree);
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный возрастающий массив (двоичное дерево): ");
-            incTree.display();
-            Console.WriteLine("\nКоличество перестановок в возрастающем массиве: {0},\n" +
-                "Количество сравнений в возрастающем массиве: {1}.\n", permutations, );
+            Console.ResetColor();
+            ShowArr(inc1);
+            Console.WriteLine("Количество перестановок в возрастающем массиве: {0},\n" +
+                "Количество сравнений в возрастающем массиве: {1}.\n", movesTree, comparesTree);
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Начальный убывающий массив: ");
+            Console.ResetColor();
             ShowArr(dec);
             ShakeSort(dec, out movesShake, out comparesShake);
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный убывающий массив (shaker): ");
+            Console.ResetColor();
             ShowArr(dec);
             Console.WriteLine("Количество перестановок в убывающем массиве: {0},\n" +
                 "Количество сравнений в убывающем массиве: {1}.", movesShake, comparesShake);
-            for (int i = 0; i < dec.Length; i++)
-            {
-                decTree.insert(dec[i]);
-            }
+            TreeSort(dec1, out comparesTree, out movesTree);
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный убывающий массив (двоичное дерево): ");
-            decTree.display();
-            Console.WriteLine("\nКоличество перестановок в возрастающем массиве: {0},\n" +
-                "Количество сравнений в возрастающем массиве: {1}.\n", permutations, BinaryTree.);
+            Console.ResetColor();
+            ShowArr(dec1);
+            Console.WriteLine("Количество перестановок в возрастающем массиве: {0},\n" +
+                "Количество сравнений в возрастающем массиве: {1}.\n", movesTree, comparesTree);
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Начальный неупорядоченный массив: ");
+            Console.ResetColor();
             ShowArr(disordered);
             ShakeSort(disordered, out movesShake, out comparesShake);
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный неупорядоченный массив (shaker): ");
+            Console.ResetColor();
             ShowArr(disordered);
             Console.WriteLine("Количество перестановок в неупорядоченном массиве: {0},\n" +
                 "Количество сравнений в неупорядоченном массиве: {1}.", movesShake, comparesShake);
-            for (int i = 0; i < disordered.Length; i++)
-            {
-                disorderedTree.insert(disordered[i]);
-            }
+            TreeSort(disordered1, out comparesTree, out movesTree);
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный неупорядоченный массив (двоичное дерево): ");
-            disorderedTree.display();
-            Console.WriteLine("\nКоличество перестановок в возрастающем массиве: {0},\n" +
-                "Количество сравнений в возрастающем массиве: {1}.\n", permutations, compares);
+            Console.ResetColor();
+            ShowArr(disordered1);
+            Console.WriteLine("Количество перестановок в возрастающем массиве: {0},\n" +
+                "Количество сравнений в возрастающем массиве: {1}.\n", movesTree, comparesTree);
+            Console.ReadLine();
         }
     }
 }
