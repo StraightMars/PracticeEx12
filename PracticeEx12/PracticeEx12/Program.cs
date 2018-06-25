@@ -6,68 +6,65 @@ using System.Threading.Tasks;
 
 namespace PracticeEx12
 {
-    public class TreeEl
+    class TreeElement
     {
-        public int data;
-        public TreeEl left;
-        public TreeEl right;
-        public TreeEl(int value, TreeEl l = null, TreeEl r = null)
+        public readonly int Data;
+        public TreeElement Left;
+        public TreeElement Right;
+        public TreeElement(int data, TreeElement left = null, TreeElement right = null)
         {
-            data = value;
-            left = l;
-            right = r;
+            Data = data;
+            Left = left;
+            Right = right;
         }
     }
     class Program
     {
-        public static TreeEl root;
-        public static List<int> result = new List<int>();
-        public static void Add(int value, ref TreeEl staticRoot, ref int treeCompares, ref int treeChanges)
+        public static int countChange = 0;
+        public static int countCompare = 0;
+        private static TreeElement root;
+        private static readonly List<int> result = new List<int>(); // отсортированный массив
+        private static void AddToTreeElement(int value, ref TreeElement localRoot)
         {
-            if (staticRoot == null)
+            if (localRoot == null)
             {
-                treeChanges++;
-                staticRoot = new TreeEl(value);
+                countChange++;
+                localRoot = new TreeElement(value);
                 return;
             }
-            treeCompares++;
-            if (staticRoot.data < value)
+            countCompare++;
+            if (localRoot.Data < value)
             {
-                treeChanges++;
-                Add(value, ref staticRoot.right, ref treeCompares, ref treeChanges);
+                countChange++;
+                AddToTreeElement(value, ref localRoot.Right);
             }
             else
             {
-                treeChanges++;
-                Add(value, ref staticRoot.left, ref treeCompares, ref treeChanges);
+                countChange++;
+                AddToTreeElement(value, ref localRoot.Left);
             }
         }
-        public static void CreateTree(int[] arr, out int treeCompares, out int treeChanges)
+        public static void FormTree(int[] arr)
         {
-            treeCompares = 0;
-            treeChanges = 0;
-            foreach (int elem in arr)
-            {
-                Add(elem, ref root, ref treeCompares, ref treeChanges);
-            }
+            foreach (int el in arr)
+                AddToTreeElement(el, ref root);
         }
-        public static void GetNumber(TreeEl node)
+        private static void GetSortedNumRec(TreeElement node)
         {
+            // обход дерева лево -> корень -> право
             if (node != null)
             {
-                GetNumber(node.left);
-                result.Add(node.data);
-                GetNumber(node.right);
+                GetSortedNumRec(node.Left);
+                result.Add(node.Data);
+                GetSortedNumRec(node.Right);
             }
         }
-        public static int[] TreeSort(int[] arr, out int treeCompares, out int treeChanges)
+        static public int[] TreeSort(int[] arr)
         {
-            treeCompares = 0;
-            treeChanges = 0;
             root = null;
             result.Clear();
-            CreateTree(arr, out treeCompares, out treeChanges);
-            GetNumber(root);
+            FormTree(arr);
+            GetSortedNumRec(root);
             return result.ToArray();
         }
         static void ShakeSort(int[] arr, out int peresAmount, out int compareAmount)
@@ -145,7 +142,7 @@ namespace PracticeEx12
             Console.WriteLine("Здравствуйте! Введите размер массивов (для чистоты эксперимента - все массивы одной размерности):");
             bool ok;
             int N;
-            int movesShake, comparesShake, movesTree, comparesTree;
+            int movesShake, comparesShake;
             Random rnd = new Random();
             do
             {
@@ -164,6 +161,8 @@ namespace PracticeEx12
             int[] dec1 = dec;
             int[] disordered = CreateDisordedArr(N, rnd);
             int[] disordered1 = disordered;
+            ShowArr(disordered);
+            ShowArr(disordered1);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Начальный возрастающий массив: ");
             Console.ResetColor();
@@ -175,14 +174,16 @@ namespace PracticeEx12
             ShowArr(inc);
             Console.WriteLine("Количество перестановок в возрастающем массиве: {0},\n" +
                 "Количество сравнений в возрастающем массиве: {1}.", movesShake, comparesShake);
-            TreeSort(inc1, out comparesTree, out movesTree);
+            TreeSort(inc1);
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный возрастающий массив (двоичное дерево): ");
             Console.ResetColor();
             ShowArr(inc1);
             Console.WriteLine("Количество перестановок в возрастающем массиве: {0},\n" +
-                "Количество сравнений в возрастающем массиве: {1}.\n", movesTree, comparesTree);
+                "Количество сравнений в возрастающем массиве: {1}.\n", countChange, countCompare);
             Console.ForegroundColor = ConsoleColor.Green;
+            countChange = 0;
+            countCompare = 0;
             Console.WriteLine("Начальный убывающий массив: ");
             Console.ResetColor();
             ShowArr(dec);
@@ -193,14 +194,16 @@ namespace PracticeEx12
             ShowArr(dec);
             Console.WriteLine("Количество перестановок в убывающем массиве: {0},\n" +
                 "Количество сравнений в убывающем массиве: {1}.", movesShake, comparesShake);
-            TreeSort(dec1, out comparesTree, out movesTree);
+            TreeSort(dec1);
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный убывающий массив (двоичное дерево): ");
             Console.ResetColor();
             ShowArr(dec1);
             Console.WriteLine("Количество перестановок в возрастающем массиве: {0},\n" +
-                "Количество сравнений в возрастающем массиве: {1}.\n", movesTree, comparesTree);
+                "Количество сравнений в возрастающем массиве: {1}.\n", countChange, countCompare);
             Console.ForegroundColor = ConsoleColor.Green;
+            countChange = 0;
+            countCompare = 0;
             Console.WriteLine("Начальный неупорядоченный массив: ");
             Console.ResetColor();
             ShowArr(disordered);
@@ -211,13 +214,13 @@ namespace PracticeEx12
             ShowArr(disordered);
             Console.WriteLine("Количество перестановок в неупорядоченном массиве: {0},\n" +
                 "Количество сравнений в неупорядоченном массиве: {1}.", movesShake, comparesShake);
-            TreeSort(disordered1, out comparesTree, out movesTree);
+            TreeSort(disordered1);
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Отсортированный неупорядоченный массив (двоичное дерево): ");
             Console.ResetColor();
             ShowArr(disordered1);
             Console.WriteLine("Количество перестановок в возрастающем массиве: {0},\n" +
-                "Количество сравнений в возрастающем массиве: {1}.\n", movesTree, comparesTree);
+                "Количество сравнений в возрастающем массиве: {1}.\n", countChange, countCompare);
             Console.ReadLine();
         }
     }
